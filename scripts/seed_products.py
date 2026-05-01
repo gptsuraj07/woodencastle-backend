@@ -9,64 +9,154 @@ MONGO_URL = "mongodb+srv://admin:test123@cluster0.ebxwyjk.mongodb.net/wooden_sto
 client = AsyncIOMotorClient(MONGO_URL)
 db = client["wooden_store"]
 
-CATEGORY = "home-decor"
+CATEGORY = "teak-wooden-boards"
 
-BASE_URL = "https://pub-24d59b619a5d44d89b64faefe2bf26ca.r2.dev/products/home-decor"
+BASE_URL = "https://pub-24d59b619a5d44d89b64faefe2bf26ca.r2.dev/products/teak-wooden-boards"
+
+COMMON_DESC = "Made from solid single teak wood. No joinery. Chemical-free and completely food safe."
 
 # =========================
-# 🧠 PRODUCTS (DIRECT INSERT)
+# 🧠 PRODUCTS
 # =========================
 PRODUCTS = [
+
     {
-        "id": "home-decor-towel-holder",
-        "name": "Wooden Towel Holder",
+        "id": "bat-teak-board",
+        "name": "Bat Teak Board",
         "category": CATEGORY,
         "images": [
-            f"{BASE_URL}/towel-holder/1.webp",
-            f"{BASE_URL}/towel-holder/2.webp"
+            f"{BASE_URL}/bat-teak-board/1.webp",
+            f"{BASE_URL}/bat-teak-board/2.webp"
         ],
-        "variants": [
-            {
-                "type": "Standard",
-                "dimensions": "Height 3ft, Length 2.5ft, Width 1ft",
-                "price": 4975
-            }
-        ],
-        "description": "African teak wood towel holder made with pure solid wood. Durable and premium finish."
+        "price": 1375,
+        "description": COMMON_DESC
     },
+
     {
-        "id": "home-decor-wooden-ladder",
-        "name": "Wooden Ladder",
+        "id": "tag-teak-board",
+        "name": "Tag Teak Board",
         "category": CATEGORY,
         "images": [
-            f"{BASE_URL}/wooden-ladder/1.webp",
-            f"{BASE_URL}/wooden-ladder/2.webp"
+            f"{BASE_URL}/tag-teak-board/1.webp",
+            f"{BASE_URL}/tag-teak-board/2.webp"
         ],
-        "variants": [
-            {
-                "type": "Standard",
-                "dimensions": "Height 4ft, Width 2.5ft",
-                "price": 2575
-            }
+        "price": 1375,
+        "description": COMMON_DESC
+    },
+
+    {
+        "id": "bread-teak-board",
+        "name": "Bread Teak Board",
+        "category": CATEGORY,
+        "images": [
+            f"{BASE_URL}/bread-teak-board/1.webp",
+            f"{BASE_URL}/bread-teak-board/2.webp"
         ],
-        "description": "Teak wood ladder with natural finish. Ideal for decor and towel hanging."
+        "price": 1475,
+        "description": COMMON_DESC
+    },
+
+    {
+        "id": "simple-teak-board",
+        "name": "Simple Teak Board",
+        "category": CATEGORY,
+        "images": [
+            f"{BASE_URL}/simple-teak-board/1.webp",
+            f"{BASE_URL}/simple-teak-board/2.webp"
+        ],
+        "price": 1675,
+        "description": COMMON_DESC
+    },
+
+    {
+        "id": "flat-sided-teak-board",
+        "name": "Flat Sided Teak Board",
+        "category": CATEGORY,
+        "images": [
+            f"{BASE_URL}/flat-sided-teak-board/1.webp",
+            f"{BASE_URL}/flat-sided-teak-board/2.webp"
+        ],
+        "price": 1375,
+        "description": COMMON_DESC
+    },
+
+    {
+        "id": "diamond-head-teak-board",
+        "name": "Diamond Head Teak Board",
+        "category": CATEGORY,
+        "images": [
+            f"{BASE_URL}/diamond-head-teak-board/1.webp",
+            f"{BASE_URL}/diamond-head-teak-board/2.webp"
+        ],
+        "price": 1275,
+        "description": COMMON_DESC
+    },
+
+    {
+        "id": "grooves-teak-board",
+        "name": "Grooves Teak Board",
+        "category": CATEGORY,
+        "images": [
+            f"{BASE_URL}/grooves-teak-board/1.webp",
+            f"{BASE_URL}/grooves-teak-board/2.webp"
+        ],
+        "price": 1375,
+        "description": COMMON_DESC
+    },
+
+    {
+        "id": "wave-teak-board",
+        "name": "Wave Teak Board",
+        "category": CATEGORY,
+        "images": [
+            f"{BASE_URL}/wave-teak-board/1.webp",
+            f"{BASE_URL}/wave-teak-board/2.webp"
+        ],
+        "price": 1375,
+        "description": COMMON_DESC
+    },
+
+    {
+        "id": "teak-butcher-block",
+        "name": "Teak Butcher Block",
+        "category": CATEGORY,
+        "images": [
+            f"{BASE_URL}/teak-butcher-block/1.webp",
+            f"{BASE_URL}/teak-butcher-block/2.webp"
+        ],
+        "price": 2375,
+        "description": "Thick teak wood butcher block. Heavy-duty cutting surface. " + COMMON_DESC
+    },
+
+    {
+        "id": "teak-big-board",
+        "name": "Teak Big Board",
+        "category": CATEGORY,
+        "images": [
+            f"{BASE_URL}/teak-big-board/1.webp",
+            f"{BASE_URL}/teak-big-board/2.webp",
+            f"{BASE_URL}/teak-big-board/3.webp",
+            f"{BASE_URL}/teak-big-board/4.webp"
+        ],
+        "price": 0,
+        "description": COMMON_DESC
     }
+
 ]
 
 # =========================
 # 🚀 INSERT FUNCTION
 # =========================
-async def insert_home_decor():
+async def insert_teak_boards():
 
     inserted = 0
 
     for product in PRODUCTS:
 
-        # 🔴 Prevent duplicate insert
         exists = await db["products"].find_one({"id": product["id"]})
 
         if exists:
-            print(f"⏭️ Skipped (already exists): {product['id']}")
+            print(f"⏭️ Skipped: {product['id']}")
             continue
 
         await db["products"].insert_one(product)
@@ -80,4 +170,4 @@ async def insert_home_decor():
 # ▶ RUN
 # =========================
 if __name__ == "__main__":
-    asyncio.run(insert_home_decor())
+    asyncio.run(insert_teak_boards())
