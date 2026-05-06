@@ -163,13 +163,19 @@ async def get_reviews(product_id: str):
 @app.post("/admin/castle-products")
 async def create_product(
     name: str = Form(...),
-    category: str = Form(...),
+
+    parentCategory: str = Form(...),
+    subCategory: str = Form(...),
+
     description: str = Form(...),
     variants: str = Form(...),
+
     files: List[UploadFile] = File(...),
+
     user: dict = Depends(verify_token)
 ):
     try:
+
         temp_input = "temp/raw"
         temp_output = "temp/optimized"
 
@@ -179,39 +185,79 @@ async def create_product(
         os.makedirs(temp_input, exist_ok=True)
         os.makedirs(temp_output, exist_ok=True)
 
+        # =========================
+        # SAVE RAW FILES
+        # =========================
         for f in files:
+
             path = os.path.join(temp_input, f.filename)
+
             with open(path, "wb") as fp:
                 fp.write(await f.read())
 
+        # =========================
+        # PRODUCT ID
+        # =========================
         product_id = name.lower().strip().replace(" ", "-")
 
+        # =========================
+        # OPTIMIZE IMAGES
+        # =========================
         process_images(temp_input, temp_output)
 
-        image_urls = upload_images(temp_output, category, product_id)
+        # =========================
+        # UPLOAD TO R2
+        # =========================
+        image_urls = upload_images(
+            temp_output,
+            subCategory,
+            product_id
+        )
+
+        # =========================
+        # VARIANTS
+        # =========================
         variants_list = json.loads(variants)
 
-
+        # =========================
+        # PRODUCT OBJECT
+        # =========================
         product = {
+
             "id": product_id,
+
             "name": name,
-            "category": category,
+
+            "parentCategory": parentCategory,
+            "subCategory": subCategory,
+
             "description": description,
+
             "images": image_urls,
+
             "variants": variants_list
         }
 
+        # =========================
+        # INSERT
+        # =========================
         result = await db["products"].insert_one(product)
+
         product["_id"] = str(result.inserted_id)
 
+        # =========================
+        # CLEANUP
+        # =========================
         shutil.rmtree(temp_input, ignore_errors=True)
         shutil.rmtree(temp_output, ignore_errors=True)
 
-        return {"message": "Product created", "product": product}
+        return {
+            "message": "Product created",
+            "product": product
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 # =========================
 # 🗑️ DELETE PRODUCT
@@ -293,29 +339,41 @@ async def sitemap():
 # =========================
 @app.put("/admin/update-product/{product_id}")
 async def update_product(
+
     product_id: str,
+
     name: str = Form(...),
-    category: str = Form(...),
+
+    parentCategory: str = Form(...),
+    subCategory: str = Form(...),
+
     description: str = Form(...),
+
     variants: str = Form(...),
-    existing_images: str = Form(...),  # 🔥 ADD THIS
+
+    existing_images: str = Form(...),
+
     files: Optional[List[UploadFile]] = File(None),
-    user: dict = Depends(verify_token)   # 👈 optional images
+
+    user: dict = Depends(verify_token)
+
 ):
     try:
+
         existing = await db["products"].find_one({"id": product_id})
 
         if not existing:
             raise HTTPException(status_code=404, detail="Product not found")
 
         # =========================
-        # 🔄 NORMALIZE VARIANTS
+        # VARIANTS
         # =========================
         variants_raw = json.loads(variants)
 
         normalized_variants = []
 
         for v in variants_raw:
+
             normalized_variants.append({
                 "label": v.get("label") or v.get("type") or "Default",
                 "price": float(v.get("price", 0)),
@@ -323,9 +381,10 @@ async def update_product(
             })
 
         # =========================
-        # 🖼️ HANDLE IMAGES
+        # IMAGES
         # =========================
         existing_images_list = json.loads(existing_images)
+
         image_urls = existing_images_list
 
         if files and len(files) > 0:
@@ -340,32 +399,48 @@ async def update_product(
             os.makedirs(temp_output, exist_ok=True)
 
             for f in files:
+
                 path = os.path.join(temp_input, f.filename)
+
                 with open(path, "wb") as fp:
                     fp.write(await f.read())
 
             process_images(temp_input, temp_output)
 
-            # replace images completely
-            image_urls = upload_images(temp_output, category, product_id)
+            image_urls = upload_images(
+                temp_output,
+                subCategory,
+                product_id
+            )
 
         # =========================
-        # 🧠 UPDATE OBJECT
+        # UPDATED DATA
         # =========================
         updated_data = {
+
             "name": name,
-            "category": category,
+
+            "parentCategory": parentCategory,
+            "subCategory": subCategory,
+
             "description": description,
+
             "variants": normalized_variants,
+
             "images": image_urls
         }
 
+        # =========================
+        # UPDATE DB
+        # =========================
         await db["products"].update_one(
             {"id": product_id},
             {"$set": updated_data}
         )
 
-        return {"message": "Product updated successfully"}
+        return {
+            "message": "Product updated successfully"
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
