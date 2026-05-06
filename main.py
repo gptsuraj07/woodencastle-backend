@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Header
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from database import test_connection, db
 from pydantic import BaseModel, Field
@@ -228,6 +229,63 @@ async def delete_product(
         raise HTTPException(status_code=404, detail="Product not found")
 
     return {"message": "Product deleted successfully"}
+
+
+
+# =========================
+# 🗺️ SITEMAP
+# =========================
+@app.get("/sitemap.xml")
+async def sitemap():
+
+    products = await db["products"].find().to_list(None)
+
+    urls = ""
+
+    # =========================
+    # STATIC PAGES
+    # =========================
+    static_pages = [
+        "",
+        "/products",
+        "/about",
+        "/contact"
+    ]
+
+    for page in static_pages:
+
+        urls += f"""
+        <url>
+            <loc>https://thewoodencastle.com{page}</loc>
+        </url>
+        """
+
+
+    # =========================
+    # PRODUCT PAGES
+    # =========================
+    for product in products:
+
+        product_id = product.get("id")
+
+        if product_id:
+
+            urls += f"""
+            <url>
+                <loc>https://thewoodencastle.com/products/{product_id}</loc>
+            </url>
+            """
+
+    xml_content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{urls}
+</urlset>
+"""
+
+    return Response(
+        content=xml_content,
+        media_type="application/xml"
+    )
 
 
 # =========================
