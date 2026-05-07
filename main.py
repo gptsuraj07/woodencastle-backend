@@ -165,7 +165,7 @@ async def create_product(
     name: str = Form(...),
 
     parentCategory: str = Form(...),
-    subCategory: str = Form(...),
+    subCategory: str = Form(""),
 
     description: str = Form(...),
     variants: str = Form(...),
@@ -345,7 +345,7 @@ async def update_product(
     name: str = Form(...),
 
     parentCategory: str = Form(...),
-    subCategory: str = Form(...),
+    subCategory: str = Form(""),
 
     description: str = Form(...),
 
