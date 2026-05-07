@@ -102,7 +102,7 @@ async def get_products():
 
     products = []
 
-    cursor = db["products"].find().sort("displayOrder", 1)
+    cursor = db["products"].find().sort("displayOrder", -1)
 
     async for product in cursor:
         product["_id"] = str(product["_id"])
