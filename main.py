@@ -99,10 +99,15 @@ def home():
 
 @app.get("/products")
 async def get_products():
+
     products = []
-    async for product in db["products"].find():
+
+    cursor = db["products"].find().sort("displayOrder", 1)
+
+    async for product in cursor:
         product["_id"] = str(product["_id"])
         products.append(product)
+
     return products
 
 
